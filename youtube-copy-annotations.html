@@ -41,7 +41,7 @@ Note that the author element is empty on new annotations, but is still required 
 
 function extract_ids(str) {
 	if (str == null) return str;
-	return str.replace(/.*?[\?&](v|video_id)=([^&\s]+)[\S]*/g, '$2');
+	return str.replace(/.*?([\?&]v=|[\?&]video_id=|youtu.be\/)([^&\?#\s]+)[\S]*/g, '$2');
 }
 
 function get() {
@@ -70,13 +70,14 @@ function getxml() {
 }
 
 function update() {
+	var ids = document.getElementById('ids');
+	ids.value = extract_ids(ids.value);
+
 	var auth_token = document.getElementById('auth_token').value;
 	if (!auth_token) return alert('You must get an auth token before proceeding!');
 	
 	var data = getxml();
 	if (!data) return;
-	var ids = document.getElementById('ids');
-	ids.value = extract_ids(ids.value);
 	ids = ids.value.split('\n');
 	ids.forEach(function(id) {
 		var ret = /^([^ #]+)/.exec(id);
@@ -102,11 +103,12 @@ function update() {
 }
 
 function publish() {
+	var ids = document.getElementById('ids');
+	ids.value = extract_ids(ids.value);
+
 	var auth_token = document.getElementById('auth_token').value;
 	if (!auth_token) return alert('You must get an auth token before proceeding!');
 	
-	var ids = document.getElementById('ids');
-	ids.value = extract_ids(ids.value);
 	ids = ids.value.split('\n');
 	ids.forEach(function(id) {
 		var ret = /^([^ #]+)/.exec(id);
