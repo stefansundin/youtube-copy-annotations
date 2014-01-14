@@ -19,7 +19,7 @@ Edit the XML to fit this format (i.e. add <authenticationHeader> and rename <ann
 <document>
   <requestHeader video_id="X" />
   <authenticationHeader auth_token="Y" />
-  
+
   <updatedItems>
     <annotation ...>...</annotation>
     ...
@@ -46,9 +46,26 @@ function extract_ids(str) {
 
 function get() {
 	var video_id = extract_ids(document.getElementById('video_id').value);
-	window.open('https://www.youtube.com/annotations_invideo/read2?features=1&legacy=1&video_id='+video_id);
+	//window.open('https://www.youtube.com/annotations_invideo/read2?features=1&legacy=1&video_id='+video_id);
 	// legacy=0 appears to only fetch InVideo annotations
-	//window.open('get-annotations.php?v='+video_id);
+	window.open('get-annotations.php?v='+video_id);
+}
+
+function gethelp(e) {
+	if (e.keyCode == 13) get();
+}
+
+function checkxml() {
+	var data = document.getElementById('data').value;
+	var warn = document.getElementById('ampersand_warning');
+	//var ret = /&(?!amp;)/.exec(data);
+	var ret = /&(?!([a-zA-Z][a-zA-Z0-9]*|(#\d+));)/.exec(data);
+	if (ret == null) {
+		warn.style.visibility = 'hidden';
+	}
+	else {
+		warn.style.visibility = 'visible';
+	}
 }
 
 function getxml() {
@@ -56,16 +73,16 @@ function getxml() {
 	if (!data) return alert('You must supply the XML data!');
 	data = data.replace(/<\?xml[^>]*\?>/, ''); //https://bugzilla.mozilla.org/show_bug.cgi?id=336551
 	data = data.replace(/annotations>/g, 'updatedItems>'); //rename <annotations> to <updatedItems>
-	
+
 	// insert requestHeader and authenticationHeader, if not already present
 	var ret = /<authenticationHeader/.exec(data);
 	if (ret == null) {
 		data = data.replace(/<document.*?>/, '$&<requestHeader video_id="" /><authenticationHeader auth_token="" />');
 	}
-	
+
 	// remove InVideo Programming
-	data = data.replace(/<annotation [\S\s]*?id="channel:[\S\s]*?<\/annotation>/g, '');
-	
+	data = data.replace(/<annotation [^>]*?id="channel:[\S\s]*?<\/annotation>/g, '');
+
 	return data;
 }
 
@@ -75,30 +92,32 @@ function update() {
 
 	var auth_token = document.getElementById('auth_token').value;
 	if (!auth_token) return alert('You must get an auth token before proceeding!');
-	
+
 	var data = getxml();
 	if (!data) return;
+	var ret = data.match(/<annotation /g);
+	var num = (ret != null)?ret.length:0;
 	ids = ids.value.split('\n');
 	ids.forEach(function(id) {
 		var ret = /^([^ #]+)/.exec(id);
 		if (ret == null) return;
 		var id = ret[1];
-		
+
 		// insert video_id and auth_token into xml
 		data = data.replace(/<requestHeader(.*?)video_id=".*?"(.*?)>/, '<requestHeader$1video_id="'+id+'"$2>');
 		data = data.replace(/<authenticationHeader(.*?)auth_token=".*?"(.*?)>/, '<authenticationHeader$1auth_token="'+auth_token+'"$2>');
 		console.log(data);
-		
+
 		var xhr = new XMLHttpRequest();
 		xhr.withCredentials = true;
 		xhr.open('POST', 'https://www.youtube.com/annotations_auth/update2', true);
 		xhr.send(data);
-		
+
 		var link = document.createElement('a');
 		link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
 		link.target = '_blank';
 		link.appendChild(document.createTextNode(id));
-		log('Updating ', link);
+		log('Copying '+num+' annotations to ', link);
 	});
 }
 
@@ -108,22 +127,22 @@ function publish() {
 
 	var auth_token = document.getElementById('auth_token').value;
 	if (!auth_token) return alert('You must get an auth token before proceeding!');
-	
+
 	ids = ids.value.split('\n');
 	ids.forEach(function(id) {
 		var ret = /^([^ #]+)/.exec(id);
 		if (ret == null) return;
 		var id = ret[1];
-		
+
 		// publish
 		var pubdata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /></document>';
 		console.log(pubdata);
-		
+
 		var xhr = new XMLHttpRequest();
 		xhr.withCredentials = true;
 		xhr.open('POST', 'https://www.youtube.com/annotations_auth/publish2', true);
 		xhr.send(pubdata);
-		
+
 		var link = document.createElement('a');
 		link.href = 'https://www.youtube.com/watch?v='+id;
 		link.target = '_blank';
@@ -135,7 +154,7 @@ function publish() {
 function clearvideo() {
 	var auth_token = document.getElementById('auth_token').value;
 	if (!auth_token) return alert('You must get an auth token before proceeding!');
-	
+
 	var data = getxml();
 	if (!data) return;
 	var id = extract_ids(prompt('Input video id or url:'));
@@ -146,8 +165,10 @@ function clearvideo() {
 	// extract annotation ids
 	var deldata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /><deletedItems>';
 	var regex = /<annotation( author=".*?")?( id=".*?")/ig;
+	var num = 0;
 	while ((ret=regex.exec(data)) != null) {
-		if (!ret[1]) ret[1] = ' author=""'; // author is only included when fetching annotations from the annotation editor (but author must be present when deleting, so guessing empty author, which won't work if the annotation is super old; in this case, fetch the annotations via the annotation editor by using the greasemonkey script)
+		num++;
+		if (!ret[1]) ret[1] = ' author=""'; // author is only included when fetching annotations from old videos and using the annotation editor (but author must be present when deleting, so guessing empty author, which won't work if the annotation is super old; in this case, fetch the annotations via the annotation editor by using the greasemonkey script)
 		deldata += '<deletedItem'+ret[1]+ret[2]+' />';
 	}
 	deldata += '</deletedItems></document>';
@@ -157,23 +178,23 @@ function clearvideo() {
 	xhr.withCredentials = true;
 	xhr.open('POST', 'https://www.youtube.com/annotations_auth/update2', true);
 	xhr.send(deldata);
-	
+
 	var link = document.createElement('a');
 	link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
 	link.target = '_blank';
 	link.appendChild(document.createTextNode(id));
-	log('Clearing ', link);
-	
+	log('Deleting '+num+' annotations from ', link);
+
 	// publish in a moment
 	setTimeout(function() {
 		var pubdata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /></document>';
 		console.log(pubdata);
-		
+
 		var xhr = new XMLHttpRequest();
 		xhr.withCredentials = true;
 		xhr.open('POST', 'https://www.youtube.com/annotations_auth/publish2', true);
 		xhr.send(pubdata);
-		
+
 		var link = document.createElement('a');
 		link.href = 'https://www.youtube.com/watch?v='+id;
 		link.target = '_blank';
@@ -185,6 +206,7 @@ function clearvideo() {
 function log(s,e) {
 	document.body.appendChild(document.createTextNode(s));
 	if (e) document.body.appendChild(e);
+	document.body.appendChild(document.createTextNode('.'));
 	document.body.appendChild(document.createElement('br'));
 }
 
@@ -200,19 +222,27 @@ a {
 	cursor: pointer;
 	color: blue;
 }
+#ampersand_warning {
+	visibility: hidden;
+	font-size: large;
+	color: red;
+	font-weight: bold;
+}
 </style>
 </head>
 <body>
 
 <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
-<p>Created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2013-05-02.</p>
+<p>Created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2013-07-07. Make sure you are using latest version (Ctrl+F5).</p>
 <p>Leave feedback in the comments to the blog post.</p>
 
 <pre>
 1. Use Firefox! Chrome is too strict about cross-origin requests.
 2. Fetch annotations from a video.
-   <input type="text" id="video_id" placeholder="video_id or url" /> <button onclick="get();">Get annotations</button>
+   <input type="text" id="video_id" placeholder="video_id or url" onkeyup="gethelp(event);" /> <button onclick="get();">Get annotations</button>
    Right click, view page source, and copy.
+   <b>Note:</b> If you have ampersands in a text or if you use urls, make sure the ampersands are escaped!
+   This means all <b>&amp;</b> should be escaped like <b>&amp;amp;</b>. If you copy using <i>view page source</i> in Firefox, this will happen automatically!
 3. (Optional) This is your chance to do things the YouTube developers did not think of.
    A few examples:
    If you want the annotations to last the whole video, you can edit the end time to something like t="1:00:00.0".
@@ -227,18 +257,20 @@ a {
 7. Click the Update button. This will submit the XML.
    Verify that the annotations were copied by looking at the draft version of the annotations on the 'edit annotations' page (they haven't been published yet).
    If it didn't work and the annotations weren't copied, use <a href="https://addons.mozilla.org/en-US/firefox/addon/firebug/" target="_blank">Firebug</a> and check the Net console and see if the result was anything other than "200 Ok".
-   Note that "<a target="_blank" href="http://support.google.com/youtube/bin/answer.py?hl=en&amp;answer=2790636">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail.
-   If it did not work, please make sure you are not trying to copy annotations that were created a long time ago.
+   Note that "<a target="_blank" href="http://support.google.com/youtube/bin/answer.py?hl=en&amp;answer=2790636">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <i>channel:</i>).
+   If it did not work, please make sure you are not trying to copy annotations that were created a very long time ago.
 8. Click the Publish button if you also want to publish the annotations.
 9. ???
 10.Profit!
 11.Give something back. Donate! <a href="http://stefansundin.com/donate" target="_blank">http://stefansundin.com/donate</a>
+   Donating is the best way to get issues fixed.
 
 Look at the source code of this page to read a more technical description of how it works.
 
 </pre>
 
-<textarea id="data" rows="20" cols="80" placeholder="Paste le big XML data here...   &gt;&lt;(((('&gt;"></textarea><br/>
+<textarea id="data" rows="20" cols="80" placeholder="Paste le big XML data here...   &gt;&lt;(((('&gt;" onblur="checkxml();"></textarea><br/>
+<div id="ampersand_warning">Warning: Your XML code contains unescaped ampersands (&amp;), please see note above!</div>
 <input type="text" id="auth_token" placeholder="auth_token" style="width:650px;" /><br/>
 <p><button onclick="clearvideo();">Delete annotations</button> This button will delete the annotations from the video you fetched the XML.</p>
 <br/>
