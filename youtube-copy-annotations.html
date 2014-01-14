@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Copy YouTube Annotations</title>
+<script type="text/javascript">
+
+/* Technical details:
+
+You can fetch annotations using these urls:
+Published version: http://www.youtube.com/annotations/read2?feat=TCS&video_id=X
+Draft version: http://www.youtube.com/annotations_auth/read2?video_id=X&username=Y&auth_token=Z&owner=1&timestamp=&draft=1
+You can get the auth_token by looking at the source of the edit annotations page.
+
+Remove <?xml version="1.0" encoding="UTF-8" ?> if you want to use Firefox to submit the data. See https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+It's not possible to inspect the result of the request. This is since YouTube does not set the access control headers for cross-site requests.
+The request is still made though, Firefox is just rejecting the script access to the result.
+The result will look something like this if successful: <document response_type="update" status="200"><MESSAGE>OK.</MESSAGE></document>
+
+Edit the XML to fit this format (i.e. add <authenticationHeader> and rename <annotations> to <updatedItems>):
+<document>
+  <requestHeader video_id="X" />
+  <authenticationHeader timestamp="" owner="1" auth_token="Z" username="Y" />
+  
+  <updatedItems>
+    <annotation ...>...</annotation>
+    ...
+  </updatedItems>
+</document>
+
+Submit the XML as POST data to this url: http://www.youtube.com/annotations_auth/update2
+
+
+To publish, send this XML as POST data to this url: http://www.youtube.com/annotations_auth/publish2
+<document><requestHeader video_id="X" /><authenticationHeader timestamp="" owner="1" auth_token="Z" username="Y" /></document>
+
+
+To delete annotations, this syntax must be used:
+<deletedItems><deletedItem author="X" id="annotation_Y" /></deletedItems>
+instead of <updatedItems>.
+
+
+Regexp to filter out annotation ids:
+Search:  <annotation.*? id="annotation_([0-9]+)".*?</annotation>
+Replace: \1\n
+Replace: <deletedItem author="X" id="annotation_\1" />\n
+I use Notepad2. I first had to remove all newlines.
+
+*/
+
+function get() {
+	var video_id = document.getElementById("video_id").value;
+	window.open("http://www.youtube.com/annotations/read2?feat=TCS&video_id="+video_id);
+}
+
+function getxml() {
+	var data = document.getElementById("data").value;
+	data = data.replace(/<\?xml[^>]*\?>/, ""); //https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+	data = data.replace(/annotations>/g, "updatedItems>"); //rename <annotations> to <updatedItems>
+	var xml = new XML(data);
+	
+	if (xml.requestHeader.length() == 0) {
+		xml.appendChild(<requestHeader video_id="" />);
+	}
+	if (xml.authenticationHeader.length() == 0) {
+		xml.appendChild(<authenticationHeader timestamp="" owner="1" auth_token="" username="" />);
+	}
+	
+	var username = document.getElementById("username").value;
+	if (username != "") {
+		xml.authenticationHeader.@username = username;
+	}
+	if (xml.authenticationHeader.@username == "") {
+		log("You must enter a username.");
+		return false;
+	}
+	
+	return xml;
+}
+
+function update() {
+	var xml = getxml();
+	if (!xml) return;
+	//log(xml.toXMLString());
+	//log(xml.requestHeader.@video_id);
+	
+	var ids = document.getElementById("ids").value.split("\n");
+	ids.forEach(function(id) {
+		var space = id.indexOf(" ");
+		if (space != -1) id = id.substring(0, space);
+		if (id == "") return;
+		
+		var video_id = id.substring(0, id.indexOf(":"));
+		var auth_token = id.substring(id.indexOf(":")+1);
+		
+		xml.requestHeader.@video_id = video_id;
+		xml.authenticationHeader.@auth_token = auth_token;
+		
+		var xhr = new XMLHttpRequest();
+		xhr.withCredentials = true;
+		xhr.open("POST", "http://www.youtube.com/annotations_auth/update2", true);
+		xhr.send(xml.toXMLString());
+		
+		var link = document.createElement("a");
+		link.href = "http://www.youtube.com/my_videos_annotate?v="+video_id;
+		link.appendChild(document.createTextNode(video_id));
+		log("Updating ", link);
+	});
+}
+
+function publish() {
+	var xml = getxml();
+	if (!xml) return;
+	var username = xml.authenticationHeader.@username;
+	
+	var ids = document.getElementById("ids").value.split("\n");
+	ids.forEach(function(id) {
+		var space = id.indexOf(" ");
+		if (space != -1) id = id.substring(0, space);
+		if (id == "") return;
+		
+		var video_id = id.substring(0, id.indexOf(":"));
+		var auth_token = id.substring(id.indexOf(":")+1);
+		
+		var pubdata = <document><requestHeader video_id="" /><authenticationHeader timestamp="" owner="1" auth_token="" username="" /></document>;
+		pubdata.requestHeader.@video_id = video_id;
+		pubdata.authenticationHeader.@auth_token = auth_token;
+		pubdata.authenticationHeader.@username = username;
+		
+		var xhr = new XMLHttpRequest();
+		xhr.withCredentials = true;
+		xhr.open("POST", "http://www.youtube.com/annotations_auth/publish2", true);
+		xhr.send(pubdata.toXMLString());
+		
+		var link = document.createElement("a");
+		link.href = "http://www.youtube.com/watch?v="+video_id;
+		link.appendChild(document.createTextNode(video_id));
+		log("Publishing ", link);
+	});
+}
+
+function updateusername() {
+	var username = document.getElementById("username");
+	if (username.value != "") return;
+	
+	var data = document.getElementById("data").value;
+	var ret = /author="(.*?)"/.exec(data);
+	if (ret == null) return;
+	
+	username.value = ret[1];
+}
+
+function log(s,e) {
+	document.body.appendChild(document.createTextNode(s));
+	if (e) document.body.appendChild(e);
+	document.body.appendChild(document.createElement("br"));
+}
+
+</script>
+<style type="text/css">
+body {
+	min-height: 1500px;
+}
+input {
+	font-family: monospace;
+}
+a {
+	cursor: pointer;
+	color: blue;
+}
+</style>
+</head>
+<body>
+
+<p>This site describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data and modify it at will.</p>
+<p>This page was created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2012-02-12.</p>
+
+<pre>
+1. Use Firefox! The XML code will only run in Firefox!
+2. Fetch annotations from an existing video:
+   <input type="text" id="video_id" placeholder="video_id" /> <button onclick="get();">Get annotations</button>
+3. (Optional) This is your chance to do things the YouTube developers did not think of.
+   A few examples:
+   If you want the annotations to last the whole video, you can edit the end time to something like t="1:00:00.0".
+   You can change the width and height of the annotations to sizes that the normal editor will not allow.
+   You can remove the ugly padding that YouTube added to notes around 2012-01-14. Simply remove the &lt;padding/> tags.
+   While you can change link urls to external urls, they will not work. The video will have to be marked by Google to allow external urls (iv_allow_external_links=1 in flashvars).
+   You can make a video automatically repeat by inserting a pause annotation at the very end of the video with 0.1s in length (<a href="http://www.youtube.com/watch?v=AYAqWW5nET4" target="_blank">example</a>). You can do this in the normal annotation editor.
+   Let me know if you find a nice trick!
+4. Paste the XML into the box below.
+5. Insert your username in the text field below. Make sure you are logged in to this user on YouTube.
+6. Fetch video_id:auth_token pairs to the videos you want to copy the annotations to.
+   You can use <a href="youtube_auth_token.user.js">this Greasemonkey script</a> to help you do that.
+   A text field with the video_id:auth_token pair will appear in the lower right corner of the "edit annotations" page.
+   A download link for the annotations will also appear.
+   <a href="https://addons.mozilla.org/en-US/firefox/addon/flashblock/">Flashblock</a> is also a good idea.
+7. Open the Error Console (Ctrl+Shift+J).
+   Click the Update button. This will submit the XML.
+   If nothing happened, you will see an error message in the Error Console.
+   The annotations have now been saved as a draft.
+8. Click the Publish button if you also want to publish the annotations.
+9. ???
+10.Profit!
+
+To delete annotations, you can use this syntax:
+&lt;document>&lt;deletedItems>
+&lt;deletedItem author="<b>X</b>" id="<b>annotation_Y1</b>" />
+&lt;deletedItem author="<b>X</b>" id="<b>annotation_Y2</b>" />
+&lt;/deletedItems>&lt;/document>
+
+</pre>
+
+<textarea id="data" rows="20" cols="80" placeholder="Le big XML data here..  &gt;&lt;(((('&gt;" onchange="updateusername();"></textarea><br/>
+<input type="text" id="username" placeholder="username" style="width:300px" /><br/>
+<br/>
+
+<textarea id="ids" rows="5" cols="80" placeholder="List of video_id:auth_token pairs. Separate with newlines. Everything that comes after a space is considered a comment."></textarea>
+
+<p><button onclick="update();">Update</button> <button onclick="publish();">Publish</button></p>
+
+</body>
+</html>
