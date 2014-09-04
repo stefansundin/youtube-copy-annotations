@@ -2,7 +2,7 @@
 // @name         YouTube auth_token
 // @namespace    https://gist.github.com/stefansundin/
 // @homepage     https://gist.github.com/stefansundin/8412555
-// @version      0.1
+// @version      0.2
 // @author       Stefan Sundin
 // @description  Displays the auth_token and adds a download link for annotations.
 // @icon         https://www.youtube.com/favicon.ico
