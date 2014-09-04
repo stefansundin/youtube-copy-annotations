@@ -2,7 +2,7 @@
 // @name         YouTube auth_token
 // @namespace    https://gist.github.com/stefansundin/
 // @homepage     https://gist.github.com/stefansundin/8412555
-// @version      0.2
+// @version      0.3
 // @author       Stefan Sundin
 // @description  Displays the auth_token and adds a download link for annotations.
 // @icon         https://www.youtube.com/favicon.ico
@@ -44,13 +44,13 @@ if (window.location.pathname == '/my_videos') {
 
     // Check if unlisted
     var unlisted = videos[i].getElementsByClassName('vm-unlisted');
-    if (unlisted.length > 0 && unlisted.className.indexOf('hid') == -1) {
+    if (unlisted.length > 0 && unlisted[0].className.indexOf('hid') == -1) {
       ta.value += ' (unlisted)';
     }
 
     // Check if private
     var priv = videos[i].getElementsByClassName('vm-priv');
-    if (priv.length > 0 && priv.className.indexOf('hid') == -1) {
+    if (priv.length > 0 && priv[0].className.indexOf('hid') == -1) {
       ta.value += ' (private)';
     }
 
