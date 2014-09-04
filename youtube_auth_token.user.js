@@ -5,6 +5,7 @@
 // @version      0.1
 // @author       Stefan Sundin
 // @description  Displays the auth_token and adds a download link for annotations.
+// @icon         https://www.youtube.com/favicon.ico
 // @match        *://www.youtube.com/my_videos*
 // @match        *://www.youtube.com/my_videos_annotate*
 // @downloadURL  https://gist.github.com/stefansundin/8412555/raw/youtube_auth_token.user.js
@@ -39,7 +40,21 @@ if (window.location.pathname == '/my_videos') {
   for (var i=0; i < videos.length; i++) {
     var video_id = videos[i].id.substring('vm-video-'.length);
     var title = videos[i].getElementsByClassName('vm-video-title-content')[0].textContent;
-    ta.value += video_id+' # '+title+'\n';
+    ta.value += video_id+' # '+title;
+
+    // Check if unlisted
+    var unlisted = videos[i].getElementsByClassName('vm-unlisted');
+    if (unlisted.length > 0 && unlisted.className.indexOf('hid') == -1) {
+      ta.value += ' (unlisted)';
+    }
+
+    // Check if private
+    var priv = videos[i].getElementsByClassName('vm-priv');
+    if (priv.length > 0 && priv.className.indexOf('hid') == -1) {
+      ta.value += ' (private)';
+    }
+
+    ta.value += '\n';
   }
 }
 else {
