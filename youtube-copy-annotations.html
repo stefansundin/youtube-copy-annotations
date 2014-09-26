@@ -46,9 +46,8 @@ function extract_ids(str) {
 
 function get() {
 	var video_id = extract_ids(document.getElementById('video_id').value);
-	//window.open('https://www.youtube.com/annotations_invideo/read2?features=1&legacy=1&video_id='+video_id);
+	window.open('https://www.youtube.com/annotations_invideo?features=1&legacy=1&video_id='+video_id);
 	// legacy=0 appears to only fetch InVideo annotations
-	window.open('get-annotations.php?v='+video_id);
 }
 
 function gethelp(e) {
@@ -233,10 +232,10 @@ a {
 <body>
 
 <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
-<p>Created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2014-09-04.</p>
-<p>Leave feedback in the comments to the blog post.</p>
-
 <pre>
+Created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2014-09-04.
+Leave feedback in the comments to the blog post.
+
 <b>Alternatives to this website:</b> (if you can't get this working)
 1. There is a website called <a href="http://www.youtubeannotations.com/" target="_blank">YoutubeAnnotations.com</a> that can copy annotations. This works in conjunction with an extension you install to your browser. It should work with both Chrome and Firefox.
 2. There used to be a userscript for Chrome made by ZSleyerLP, adapted from the code on this website. But it appears this website is no longer working.
@@ -247,7 +246,8 @@ a {
    <b><a href="https://www.youtube.com/watch?v=ieauXuXKjHc" target="_blank">Watch this video</a></b> for a walkthrough how to use the tool.
 2. Fetch annotations from a video.
    <input type="text" id="video_id" placeholder="video_id or url" onkeyup="gethelp(event);" /> <button onclick="get();">Get annotations</button>
-   Right click, view page source, and copy.
+   <b>Note:</b> All this input box does is redirect you to YouTube. You don't need to use this box if you have hundreds of videos, you can simply go directly to the youtube.com url.
+   Once you see the XML, right click, view page source, and copy everything.
    <b>Note:</b> If you have ampersands in a text or if you use urls, make sure the ampersands are escaped!
    This means all <b>&amp;</b> should be escaped like <b>&amp;amp;</b>. If you copy using <i>view page source</i> in Firefox, this will happen automatically!
 3. (Optional) This is your chance to do things the YouTube developers did not think of.
@@ -264,7 +264,7 @@ a {
 7. Click the Update button. This will submit the XML.
    Verify that the annotations were copied by looking at the draft version of the annotations on the 'edit annotations' page (they haven't been published yet).
    If it didn't work and the annotations weren't copied, use <a href="https://addons.mozilla.org/en-US/firefox/addon/firebug/" target="_blank">Firebug</a> and check the Net console and see if the result was anything other than "200 Ok".
-   Note that "<a target="_blank" href="http://support.google.com/youtube/bin/answer.py?hl=en&amp;answer=2790636">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <i>channel:</i>).
+   Note that "<a target="_blank" href="https://support.google.com/youtube/answer/2790636?hl=en">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <i>channel:</i>).
    If it did not work, please make sure you are not trying to copy annotations that were created a very long time ago.
 8. Click the Publish button if you also want to publish the annotations.
 9. ???
