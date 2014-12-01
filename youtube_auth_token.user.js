@@ -42,7 +42,7 @@ if (window.location.pathname == '/my_videos') {
     for (var i=0; i < videos.length; i++) {
       var video_id = videos[i].id.substring('vm-video-'.length);
       var title = videos[i].getElementsByClassName('vm-video-title-content')[0].textContent;
-      ta.value += video_id+' # '+title;
+      ta.value += video_id+'   # '+title;
 
       // Check if unlisted
       var unlisted = videos[i].getElementsByClassName('vm-unlisted');
