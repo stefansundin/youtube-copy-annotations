@@ -1,7 +1,8 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <title>Copy YouTube Annotations</title>
-<script type="text/javascript">
+<script>
 
 /* Technical details:
 
@@ -231,10 +232,10 @@ a {
 </head>
 <body>
 
-<p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
+<p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript. You can and should save this file locally, in case this website ever disappears. If you did this, you can <a href="https://stefansundin.github.io/youtube-copy-annotations/youtube-copy-annotations.html">click here</a> to go to the web version.</p>
 <pre>
-Created by <a href="http://stefansundin.com/">Stefan Sundin</a>. <a href="http://stefansundin.com/blog/277">Read blog post</a>. Last modified 2014-09-04.
-Leave feedback in the comments to the blog post.
+Created by <a href="https://stefansundin.github.io/">Stefan Sundin</a>. Last modified 2014-12-25.
+Leave feedback in the comments to <a target="_blank" href="http://stefansundin.com/blog/277">the blog post</a>.
 
 <b>Alternatives to this website:</b> (if you can't get this working)
 1. There is a website called <a href="http://www.youtubeannotations.com/" target="_blank">YoutubeAnnotations.com</a> that can copy annotations. This works in conjunction with an extension you install to your browser. It should work with both Chrome and Firefox.
@@ -257,7 +258,7 @@ Leave feedback in the comments to the blog post.
    Let me know if you find a nice trick!
 4. Paste the XML into the box below.
 5. Fetch one auth_token to give this script the ability to update your videos, and put it in the auth_token box below.
-   I have made a <a href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/" target="_blank">Greasemonkey</a> script to simplify getting the auth_token. <a href="https://gist.github.com/stefansundin/8412555/raw/youtube_auth_token.user.js">Install the script here</a>.
+   I have made a <a href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/" target="_blank">Greasemonkey</a> script to simplify getting the auth_token. <a href="https://github.com/stefansundin/youtube-copy-annotations/raw/gh-pages/youtube_auth_token.user.js">Install the script here</a>.
    A text field with the auth_token will appear in the lower right corner of the "edit annotations" page.
    A download link for the annotations will also appear.
 6. Put a list of destination video ids or urls in the box below.
@@ -286,6 +287,6 @@ Look at the source code of this page to read a more technical description of how
 <textarea id="ids" rows="10" cols="80" placeholder="List of video_ids or urls. Separate with newlines. Everything that comes after a space is considered a comment."></textarea>
 <p><button onclick="update();">Update</button> <button onclick="publish();">Publish</button></p>
 
-<script src="/site/ga.js" type="text/javascript" defer="defer"></script>
+<script src="/js/ga.js" type="text/javascript" defer="defer"></script>
 </body>
 </html>

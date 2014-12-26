@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         YouTube auth_token
 // @namespace    https://gist.github.com/stefansundin/
-// @homepage     https://gist.github.com/stefansundin/8412555
-// @version      0.4
+// @homepage     https://github.com/stefansundin/youtube-copy-annotations/
+// @version      0.5
 // @author       Stefan Sundin
 // @description  Displays the auth_token and adds a download link for annotations.
 // @icon         https://www.youtube.com/favicon.ico
 // @match        *://www.youtube.com/my_videos*
 // @match        *://www.youtube.com/my_videos_annotate*
-// @downloadURL  https://gist.github.com/stefansundin/8412555/raw/youtube_auth_token.user.js
+// @downloadURL  https://github.com/stefansundin/youtube-copy-annotations/raw/gh-pages/youtube_auth_token.user.js
 // ==/UserScript==
 
 if (window.location.pathname == '/my_videos') {
