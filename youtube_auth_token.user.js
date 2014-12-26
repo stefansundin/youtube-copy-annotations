@@ -2,7 +2,7 @@
 // @name         YouTube auth_token
 // @namespace    https://gist.github.com/stefansundin/
 // @homepage     https://github.com/stefansundin/youtube-copy-annotations/
-// @version      0.5
+// @version      0.6
 // @author       Stefan Sundin
 // @description  Displays the auth_token and adds a download link for annotations.
 // @icon         https://www.youtube.com/favicon.ico
