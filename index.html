@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="https://stefansundin.github.io/youtube-copy-annotations/" target="_blank">
+  <title>Copy YouTube Annotations</title>
+
+  <meta charset="utf-8">
+  <meta name="author" content="Stefan Sundin">
+  <meta name="description" content="Copy YouTube Annotations">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <link rel="icon" href="img/icon32.png">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="alternate" type="application/atom+xml" href="https://github.com/stefansundin/youtube-copy-annotations/commits.atom" title="Changelog">
+  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
+
+
+<script>
+
+function extract_ids(str) {
+  if (str == null) return str;
+  return str.replace(/.*?([\?&]v=|[\?&]video_id=|youtu.be\/)([^&\?#\s]+)[\S]*/g, '$2');
+}
+
+function get() {
+  var video_id = extract_ids(document.getElementById('video_id').value);
+  window.open('https://www.youtube.com/annotations_invideo?features=1&legacy=1&video_id='+video_id);
+  // legacy=0 appears to only fetch InVideo annotations
+}
+
+function gethelp(e) {
+  if (e.keyCode == 13) get();
+}
+
+function checkxml() {
+  var data = document.getElementById('data').value;
+  var warn = document.getElementById('ampersand_warning');
+  var ret = /&(?!([a-zA-Z][a-zA-Z0-9]*|(#\d+));)/.exec(data);
+  if (ret == null) {
+    warn.style.visibility = 'hidden';
+  }
+  else {
+    warn.style.visibility = 'visible';
+  }
+}
+
+function getxml() {
+  var data = document.getElementById('data').value;
+  if (!data) return alert('You must supply the XML data!');
+  data = data.replace(/<\?xml[^>]*\?>/, ''); //https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+  data = data.replace(/annotations>/g, 'updatedItems>'); //rename <annotations> to <updatedItems>
+
+  // insert requestHeader and authenticationHeader, if not already present
+  var ret = /<authenticationHeader/.exec(data);
+  if (ret == null) {
+    data = data.replace(/<document.*?>/, '$&<requestHeader video_id="" /><authenticationHeader auth_token="" />');
+  }
+
+  // remove InVideo Programming
+  data = data.replace(/<annotation [^>]*?id="channel:[\S\s]*?<\/annotation>/g, '');
+
+  return data;
+}
+
+function update() {
+  var ids = document.getElementById('ids');
+  ids.value = extract_ids(ids.value);
+
+  var auth_token = document.getElementById('auth_token').value;
+  if (!auth_token) return alert('You must get an auth token before proceeding!');
+
+  var data = getxml();
+  if (!data) return;
+  var ret = data.match(/<annotation /g);
+  var num = (ret != null)?ret.length:0;
+  ids = ids.value.split('\n');
+  ids.forEach(function(id) {
+    var ret = /^([^ #]+)/.exec(id);
+    if (ret == null) return;
+    var id = ret[1];
+
+    // insert video_id and auth_token into xml
+    data = data.replace(/<requestHeader(.*?)video_id=".*?"(.*?)>/, '<requestHeader$1video_id="'+id+'"$2>');
+    data = data.replace(/<authenticationHeader(.*?)auth_token=".*?"(.*?)>/, '<authenticationHeader$1auth_token="'+auth_token+'"$2>');
+    console.log(data);
+
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open('POST', 'https://www.youtube.com/annotations_auth/update2', true);
+    xhr.send(data);
+
+    var link = document.createElement('a');
+    link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
+    link.target = '_blank';
+    link.appendChild(document.createTextNode(id));
+    log('Copying '+num+' annotations to ', link);
+  });
+}
+
+function publish() {
+  var ids = document.getElementById('ids');
+  ids.value = extract_ids(ids.value);
+
+  var auth_token = document.getElementById('auth_token').value;
+  if (!auth_token) return alert('You must get an auth token before proceeding!');
+
+  ids = ids.value.split('\n');
+  ids.forEach(function(id) {
+    var ret = /^([^ #]+)/.exec(id);
+    if (ret == null) return;
+    var id = ret[1];
+
+    // publish
+    var pubdata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /></document>';
+    console.log(pubdata);
+
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open('POST', 'https://www.youtube.com/annotations_auth/publish2', true);
+    xhr.send(pubdata);
+
+    var link = document.createElement('a');
+    link.href = 'https://www.youtube.com/watch?v='+id;
+    link.target = '_blank';
+    link.appendChild(document.createTextNode(id));
+    log('Publishing ', link);
+  });
+}
+
+function clearvideo() {
+  var auth_token = document.getElementById('auth_token').value;
+  if (!auth_token) return alert('You must get an auth token before proceeding!');
+
+  var data = getxml();
+  if (!data) return;
+  var id = extract_ids(document.getElementById('video_id').value);
+  if (!id) id = extract_ids(prompt('Input video id or url:'));
+  if (!id) return;
+
+  if (!confirm('Are you sure you want to delete all annotations from video with id '+id+'?')) return;
+
+  // extract annotation ids
+  var deldata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /><deletedItems>';
+  var regex = /<annotation( author=".*?")?( id=".*?")/ig;
+  var num = 0;
+  while ((ret=regex.exec(data)) != null) {
+    num++;
+    if (!ret[1]) ret[1] = ' author=""'; // author is only included when fetching annotations from old videos and using the annotation editor (but author must be present when deleting, so guessing empty author, which won't work if the annotation is super old; in this case, fetch the annotations via the annotation editor by using the greasemonkey script)
+    deldata += '<deletedItem'+ret[1]+ret[2]+' />';
+  }
+  deldata += '</deletedItems></document>';
+  console.log(deldata);
+
+  var xhr = new XMLHttpRequest();
+  xhr.withCredentials = true;
+  xhr.open('POST', 'https://www.youtube.com/annotations_auth/update2', true);
+  xhr.send(deldata);
+
+  var link = document.createElement('a');
+  link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
+  link.target = '_blank';
+  link.appendChild(document.createTextNode(id));
+  log('Deleting '+num+' annotations from ', link);
+
+  // publish in a moment
+  setTimeout(function() {
+    var pubdata = '<document><requestHeader video_id="'+id+'" /><authenticationHeader auth_token="'+auth_token+'" /></document>';
+    console.log(pubdata);
+
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open('POST', 'https://www.youtube.com/annotations_auth/publish2', true);
+    xhr.send(pubdata);
+
+    var link = document.createElement('a');
+    link.href = 'https://www.youtube.com/watch?v='+id;
+    link.target = '_blank';
+    link.appendChild(document.createTextNode(id));
+    log('Publishing ', link);
+  }, 1000);
+}
+
+function log(s, e) {
+  var log = document.getElementById('log');
+  var li = document.createElement('li');
+  li.appendChild(document.createTextNode(s));
+  if (e) li.appendChild(e);
+  li.appendChild(document.createTextNode('.'));
+  log.appendChild(li);
+}
+
+</script>
+
+<style type="text/css">
+#ampersand_warning {
+  visibility: hidden;
+  font-size: large;
+  color: red;
+  font-weight: bold;
+}
+</style>
+
+</head>
+<body>
+  <header>
+    <img src="img/icon128.png" width="150" height="133" alt="Icon" itemprop="image">
+    <hgroup>
+      <h1 itemprop="name">Copy YouTube Annotations</h1>
+      <h2 itemprop="description">Easily copy annotations between your videos</h2>
+    </hgroup>
+  </header>
+
+  <div class="container">
+    <h2>What is this website?</h2>
+
+    <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
+    <p><strong>I have only tested this script in Firefox and Chrome.</strong></p>
+    <p><strong><a href="https://www.youtube.com/watch?v=ieauXuXKjHc" target="_blank">Watch this video</a></strong> for a walkthrough how to use the tool (old interface but still works the same).</p>
+    <p>Leave feedback in the comments to <a target="_blank" href="http://stefansundin.com/blog/277">the original blog post</a>.</p>
+
+    <h3>News</h3>
+    <p><strong>2015-03-09:</strong> New design! And it appears this script also works in Chrome now.</p>
+
+
+    <h2>Step 0: Donate</h2>
+
+    <p>This website is free to use and if you find it useful, you should make a donation.</p>
+    <p>Donating is the best way to get issues fixed.</p>
+
+    <form method="post" action="https://www.paypal.com/cgi-bin/webscr" track="donate">
+      <input type="hidden" name="cmd" value="_xclick">
+      <input type="hidden" name="business" value="KYMVEK692RF5Q">
+      <input type="hidden" name="item_number" value="YouTube annotations">
+      <input type="hidden" name="return" value="https://stefansundin.github.io/thx">
+      <input type="hidden" name="cbt" value="Learn why you just became awesome">
+      <div class="input-group col-sm-5">
+        <input class="form-control" type="text" name="amount" id="amount" value="$5.00" placeholder="Amount">
+        <span class="input-group-btn">
+          <input class="btn btn-success" type="submit" value="Donate with PayPal">
+        </span>
+      </div>
+    </form>
+
+    <p>Or you can send Bitcoin to: <tt>1EhDUbc5MjC6JavC6idKiTCxnqSxY2sbTX</tt> (<a href="../img/btc-qr.png">QR code</a>)</p>
+
+    <p>You can also send Square Cash to: <a>squarEStefansundinCom</a></p>
+
+
+
+    <h2>Step 1: Get annotation data</h2>
+
+    <div class="input-group col-sm-9">
+      <input class="form-control" type="text" id="video_id" placeholder="Paste video id or url here, then click -->" onkeydown="gethelp(event);" monospace>
+      <span class="input-group-btn">
+        <button class="btn btn-primary" onclick="get();">Get annotations</button>
+      </span>
+    </div>
+
+    <p>Once you see the XML, right click, <em>view page source</em>, and copy everything.</p>
+    <p><strong>Note:</strong> All this input box does is redirect you to YouTube. You don't need to use this box if you have hundreds of videos, you can simply go directly to the youtube.com url.</p>
+
+
+    <h2>Step 2: Paste the XML</h2>
+
+    <p>Put the XML into this box.</p>
+
+    <textarea class="form-control" id="data" rows="10" placeholder="Paste le big XML data here...  &gt;&lt;(((('&gt;" onkeyup="checkxml();" monospace></textarea><br/>
+
+    <p><strong>Note:</strong> If you have ampersands (<strong>&amp;</strong>) in a text or if you use urls, make sure the ampersands are escaped! This means all <strong>&amp;</strong> should be escaped like <strong>&amp;amp;</strong>. If you copy using <em>view page source</em>, then this should happen automatically!</p>
+
+    <p id="ampersand_warning">Warning: Your XML code contains unescaped ampersands!</p>
+
+
+    <h2>Step 3: Modify the XML <small>(Optional)</small></h2>
+
+    <p>This is your chance to do things the YouTube developers did not think of. A few examples:</p>
+    <ul>
+      <li>If you want the annotations to last the whole video, change the end time to something like <tt>t="1:00:00.0"</tt>.</li>
+      <li>You can change the width and height of the annotations to sizes that the normal editor will not allow.</li>
+    </ul>
+
+
+    <h2>Step 4: Get an auth_token</h2>
+
+    <p>You need to get an auth_token to give this script the ability to update your videos, and put it in the auth_token box below. The auth_token is time dependent and will eventually stop working (I am not sure how long).</p>
+
+    <p>To get the auth_token, you can either search for it in the source code in the YouTube annotations editor, or you can install a userscript I made that simplifies getting the auth_token. To use it in Firefox, you need Greasemonkey, for Chrome you need Tampermonkey.</p>
+
+    <p class="buttons">
+      <a href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/"><button class="btn btn-default">Firefox: Install Greasemonkey</button></a>
+      <a href="https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"><button class="btn btn-default">Chrome: Install Tampermonkey</button></a>
+      <a href="https://github.com/stefansundin/youtube-copy-annotations/raw/gh-pages/youtube_auth_token.user.js" target="_self"><button class="btn btn-default">Install the userscript</button></a>
+    </p>
+
+    <p>Once you have the userscript, a text field will appear in the lower right of the YouTube annotations editor with an auth_token.</p>
+
+    <p>Put the auth_token in this text field:</p>
+
+    <p><input class="form-control" type="text" id="auth_token" placeholder="Paste your auth_token here" monospace></p>
+
+
+    <h2>Step 5: Delete! <small>(Optional)</small></h2>
+    <p>At this stage, you can delete the annotation if you want. This will only delete them from the video you fetched them from. The deletion will be published automatically.</p>
+    <p><button class="btn btn-danger" onclick="clearvideo();">Delete annotations</button></p>
+
+
+    <h2>Step 6: Destination videos</h2>
+
+    <p>Put a list of destination video ids or urls in this box.</p>
+
+    <p><textarea class="form-control" id="ids" rows="10" placeholder="List of video ids or urls. Separate with newlines. Everything that comes after a space is considered a comment." monospace></textarea></p>
+
+
+    <h2>Step 7: Copy!</h2>
+
+    <p>When you click the button below, the annotations will be copied. They are not published automatically.</p>
+
+    <p class="buttons">
+      <button class="btn btn-primary" onclick="update();">Copy annotations</button>
+      <button class="btn btn-default" onclick="publish();">Publish annotations</button>
+    </p>
+
+    <p>You should first verify that the annotations were copied correctly by looking at the draft version with the YouTube annotation editor.</p>
+    <p>If it didn't work and the annotations weren't copied, use <a href="https://addons.mozilla.org/en-US/firefox/addon/firebug/" target="_blank">Firebug</a> and check the Network tab and see if the result was anything other than "200 Ok".</p>
+    <p>Note that "<a target="_blank" href="https://support.google.com/youtube/answer/6147757">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <code>channel:</code>).</p>
+
+
+    <h2>Log</h2>
+
+    <p>The actions you perform above will be printed here.</p>
+
+    <ul id="log"></ul>
+
+
+    <h2>Credits</h2>
+
+    <p>Made by Stefan Sundin.</p>
+
+    <p>You can <a href="https://stefansundin.github.io/">browse my other projects</a>, or <a href="https://stefansundin.com/">visit my personal website</a>.</p>
+
+
+    <div class="share">
+      <iframe src="https://mdo.github.io/github-buttons/github-btn.html?user=stefansundin&amp;repo=youtube-copy-annotations&amp;type=watch&amp;count=true&amp;size=large" allowtransparency="true" frameborder="0" scrolling="0" width="155" height="30"></iframe>
+    </div>
+  </div>
+
+  <script src="https://stefansundin.github.io/js/https.js"></script>
+  <script src="../js/ga.js"></script>
+  <script src="../js/fubar.js"></script>
+</body>
+</html>
