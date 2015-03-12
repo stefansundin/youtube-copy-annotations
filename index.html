@@ -16,8 +16,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="alternate" type="application/atom+xml" href="https://github.com/stefansundin/youtube-copy-annotations/commits.atom" title="Changelog">
   <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
-
-
+  <script src="https://stefansundin.github.io/js/https.js"></script>
 <script>
 
 function extract_ids(str) {
@@ -214,7 +213,11 @@ function log(s, e) {
   </header>
 
   <div class="container">
-    <h2>What is this website?</h2>
+    <h2 id="intro">What is this website?</h2>
+
+    <noscript>
+      <div class="alert alert-danger text-center"><strong>This website requires JavaScript to work properly!</strong></div>
+    </noscript>
 
     <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
     <p><strong>I have only tested this script in Firefox and Chrome.</strong></p>
@@ -226,10 +229,9 @@ function log(s, e) {
     <p>The old design is still available <a href="old-youtube-copy-annotations.html">here</a> for a little while, make a copy if you want to keep it!</p>
 
 
-    <h2>Step 0: Donate</h2>
+    <h2 id="donate">Step 0: Donate</h2>
 
-    <p>This website is free to use and if you find it useful, you should make a donation.</p>
-    <p>Donating is the best way to get issues fixed.</p>
+    <p>This website is free to use. If you find it useful, please make a donation. I greatly appreciate any support!</p>
 
     <form method="post" action="https://www.paypal.com/cgi-bin/webscr" track="donate">
       <input type="hidden" name="cmd" value="_xclick">
@@ -245,13 +247,17 @@ function log(s, e) {
       </div>
     </form>
 
-    <p>Or you can send Bitcoin to: <tt>1EhDUbc5MjC6JavC6idKiTCxnqSxY2sbTX</tt> (<a href="../img/btc-qr.png">QR code</a>)</p>
+    <p><small><a class="expander" expand="donation-options">Show other donation options: Bitcoin, Square Cash.</a></small></p>
+    <div class="expandable" id="donation-options">
+      <p>Other donation options:</p>
+      <ul>
+        <li>Bitcoin: <tt>1EhDUbc5MjC6JavC6idKiTCxnqSxY2sbTX</tt> (<a href="../img/btc-qr.png">QR code</a>)</li>
+        <li>Square Cash: <a fubar>squarEStefansundinCom</a></li>
+      </ul>
+    </div>
 
-    <p>You can also send Square Cash to: <a>squarEStefansundinCom</a></p>
 
-
-
-    <h2>Step 1: Get annotation data</h2>
+    <h2 id="step1">Step 1: Get annotation data</h2>
 
     <div class="input-group col-sm-9">
       <input class="form-control" type="text" id="video_id" placeholder="Paste video id or url here, then click -->" onkeydown="gethelp(event);" monospace>
@@ -264,7 +270,7 @@ function log(s, e) {
     <p><strong>Note:</strong> All this input box does is redirect you to YouTube. You don't need to use this box if you have hundreds of videos, you can simply go directly to the youtube.com url.</p>
 
 
-    <h2>Step 2: Paste the XML</h2>
+    <h2 id="step2">Step 2: Paste the XML</h2>
 
     <p>Put the XML into this box.</p>
 
@@ -275,7 +281,7 @@ function log(s, e) {
     <p id="ampersand_warning">Warning: Your XML code contains unescaped ampersands!</p>
 
 
-    <h2>Step 3: Modify the XML <small>(Optional)</small></h2>
+    <h2 id="step3">Step 3: Modify the XML <small>(Optional)</small></h2>
 
     <p>This is your chance to do things the YouTube developers did not think of. A few examples:</p>
     <ul>
@@ -284,7 +290,7 @@ function log(s, e) {
     </ul>
 
 
-    <h2>Step 4: Get an auth_token</h2>
+    <h2 id="step4">Step 4: Get an auth_token</h2>
 
     <p>You need to get an auth_token to give this script the ability to update your videos, and put it in the auth_token box below. The auth_token is time dependent and will eventually stop working (I am not sure how long).</p>
 
@@ -303,19 +309,21 @@ function log(s, e) {
     <p><input class="form-control" type="text" id="auth_token" placeholder="Paste your auth_token here" monospace></p>
 
 
-    <h2>Step 5: Delete! <small>(Optional)</small></h2>
+    <h2 id="step5">Step 5: Delete! <small>(Optional)</small></h2>
+
     <p>At this stage, you can delete the annotation if you want. This will only delete them from the video you fetched them from. The deletion will be published automatically.</p>
+
     <p><button class="btn btn-danger" onclick="clearvideo();">Delete annotations</button></p>
 
 
-    <h2>Step 6: Destination videos</h2>
+    <h2 id="step6">Step 6: Destination videos</h2>
 
     <p>Put a list of destination video ids or urls in this box.</p>
 
     <p><textarea class="form-control" id="ids" rows="10" placeholder="List of video ids or urls. Separate with newlines. Everything that comes after a space is considered a comment." monospace></textarea></p>
 
 
-    <h2>Step 7: Copy!</h2>
+    <h2 id="step7">Step 7: Copy!</h2>
 
     <p>When you click the button below, the annotations will be copied. They are not published automatically.</p>
 
@@ -329,14 +337,14 @@ function log(s, e) {
     <p>Note that "<a target="_blank" href="https://support.google.com/youtube/answer/6147757">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <code>channel:</code>).</p>
 
 
-    <h2>Log</h2>
+    <h2 id="log">Log</h2>
 
     <p>The actions you perform above will be printed here.</p>
 
     <ul id="log"></ul>
 
 
-    <h2>Credits</h2>
+    <h2 id="credits">Credits</h2>
 
     <p>Made by Stefan Sundin.</p>
 
@@ -348,8 +356,8 @@ function log(s, e) {
     </div>
   </div>
 
-  <script src="https://stefansundin.github.io/js/https.js"></script>
   <script src="../js/ga.js"></script>
   <script src="../js/fubar.js"></script>
+  <script src="../js/main.js"></script>
 </body>
 </html>
