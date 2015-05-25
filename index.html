@@ -58,8 +58,8 @@ function getxml() {
     data = data.replace(/<document.*?>/, '$&<requestHeader video_id="" /><authenticationHeader auth_token="" />');
   }
 
-  // remove InVideo Programming
-  data = data.replace(/<annotation [^>]*?id="channel:[\S\s]*?<\/annotation>/g, '');
+  // remove unknown annotations (InVideo Programming, Cards, etc.)
+  data = data.replace(/<annotation [^>]*?id="(?!annotation_)[\S\s]*?<\/annotation>/g, '');
 
   return data;
 }
