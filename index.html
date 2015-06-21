@@ -93,7 +93,6 @@ function update() {
 
     var link = document.createElement('a');
     link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
-    link.target = '_blank';
     link.appendChild(document.createTextNode(id));
     log('Copying '+num+' annotations to ', link);
   });
@@ -123,7 +122,6 @@ function publish() {
 
     var link = document.createElement('a');
     link.href = 'https://www.youtube.com/watch?v='+id;
-    link.target = '_blank';
     link.appendChild(document.createTextNode(id));
     log('Publishing ', link);
   });
@@ -160,7 +158,6 @@ function clearvideo() {
 
   var link = document.createElement('a');
   link.href = 'https://www.youtube.com/my_videos_annotate?v='+id;
-  link.target = '_blank';
   link.appendChild(document.createTextNode(id));
   log('Deleting '+num+' annotations from ', link);
 
@@ -176,7 +173,6 @@ function clearvideo() {
 
     var link = document.createElement('a');
     link.href = 'https://www.youtube.com/watch?v='+id;
-    link.target = '_blank';
     link.appendChild(document.createTextNode(id));
     log('Publishing ', link);
   }, 1000);
@@ -221,14 +217,13 @@ function log(s, e) {
 
     <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
     <p><strong>I have only tested this script in Firefox and Chrome.</strong></p>
-    <p><strong><a href="https://www.youtube.com/watch?v=ieauXuXKjHc" target="_blank">Watch this video</a></strong> for a walkthrough how to use the tool (old interface but still works the same).</p>
-    <p>Leave feedback in the comments to <a target="_blank" href="http://stefansundin.com/blog/277">the original blog post</a>.</p>
+    <p><strong><a href="https://www.youtube.com/watch?v=ieauXuXKjHc">Watch this video</a></strong> for a walkthrough how to use the tool (old interface but still works the same).</p>
+    <p>Leave feedback in the comments to <a href="https://stefansundin.com/blog/277">the original blog post</a>.</p>
 
     <h3>News</h3>
     <p><strong>2015-03-22:</strong> A few people have asked me if I will update this script for the new Card annotation system. I am not sure, but I made a survey to see how much interest there is. <a href="http://goo.gl/forms/w8qf4fX8nm">Click here to answer the survey</a>.</p>
 
     <p><strong>2015-03-09:</strong> New design! And it appears this script also works in Chrome now.</p>
-    <p>The old design is still available <a href="old-youtube-copy-annotations.html">here</a> for a little while, make a copy if you want to keep it!</p>
 
 
     <h2 id="donate">Step 0: Donate</h2>
@@ -254,7 +249,8 @@ function log(s, e) {
       <p>Other donation options:</p>
       <ul>
         <li>Bitcoin: <tt>1EhDUbc5MjC6JavC6idKiTCxnqSxY2sbTX</tt> (<a href="../img/btc-qr.png">QR code</a>)</li>
-        <li>Square Cash: <a fubar>squarEStefansundinCom</a></li>
+        <li>Square Cash: <a href="https://cash.me/$StefanSundin">$StefanSundin</a></li>
+        <li>Email me if you want to send money another way: <a fubar>stefaNStefansundinCom</a></li>
       </ul>
     </div>
 
@@ -335,8 +331,8 @@ function log(s, e) {
     </p>
 
     <p>You should first verify that the annotations were copied correctly by looking at the draft version with the YouTube annotation editor.</p>
-    <p>If it didn't work and the annotations weren't copied, use <a href="https://addons.mozilla.org/en-US/firefox/addon/firebug/" target="_blank">Firebug</a> and check the Network tab and see if the result was anything other than "200 Ok".</p>
-    <p>Note that "<a target="_blank" href="https://support.google.com/youtube/answer/6147757">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <code>channel:</code>).</p>
+    <p>If it didn't work and the annotations weren't copied, use <a href="https://addons.mozilla.org/en-US/firefox/addon/firebug/">Firebug</a> and check the Network tab and see if the result was anything other than "200 Ok".</p>
+    <p>Note that "<a href="https://support.google.com/youtube/answer/6147757">InVideo Programming</a>" annotations are automatically removed since they otherwise will cause the copy to fail. You can try to remove them manually if you encounter problems (they have ids that start with <code>channel:</code>).</p>
 
 
     <h2>Log</h2>
