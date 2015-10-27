@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <base target="_blank">
   <title>Copy YouTube Annotations</title>
@@ -14,9 +14,8 @@
   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha384-pdapHxIh7EYuwy6K7iE41uXVxGCXY0sAjBzaElYGJUrzwodck3Lx6IE2lA0rFREo" crossorigin="anonymous">
   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
   <link rel="alternate" type="application/atom+xml" href="https://github.com/stefansundin/youtube-copy-annotations/commits.atom" title="Changelog">
-  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
   <script src="https://stefansundin.github.io/js/https.js"></script>
-<script>
+  <script>
 
 function extract_ids(str) {
   if (str == null) return str;
@@ -186,8 +185,8 @@ function log(s, e) {
   log.appendChild(li);
 }
 
-</script>
-<style type="text/css">
+  </script>
+  <style type="text/css">
 body {
   padding: 0 15px;
   margin-bottom: 100px;
@@ -253,7 +252,7 @@ h2 {
   color: red;
   font-weight: bold;
 }
-</style>
+  </style>
 </head>
 <body>
   <header>
@@ -265,17 +264,17 @@ h2 {
   <div class="container">
     <h2 id="intro">What is this website?</h2>
 
+    <div class="alert alert-success text-center"><strong>I have released MyTube, an extension that automates all of this. <a href="/mytube/">Please try it out!</a></strong></div>
+
     <noscript>
       <div class="alert alert-danger text-center"><strong>This website requires JavaScript to work properly!</strong></div>
     </noscript>
 
     <p>This page describes how to copy YouTube annotations across videos. It essentially helps you liberate your annotations data, modify it at will, and upload it again to multiple videos. Everything is done with client-side JavaScript.</p>
     <p><strong>I have only tested this script in Firefox and Chrome.</strong></p>
-    <p><strong><a href="https://www.youtube.com/watch?v=ieauXuXKjHc">Watch this video</a></strong> for a walkthrough how to use the tool (old interface but still works the same).</p>
-    <p>Leave feedback in the comments to <a href="https://stefansundin.com/blog/277">the original blog post</a>.</p>
 
     <h3>News</h3>
-    <p><strong>2015-03-22:</strong> A few people have asked me if I will update this script for the new Card annotation system. I am not sure, but I made a survey to see how much interest there is. <a href="http://goo.gl/forms/w8qf4fX8nm">Click here to answer the survey</a>.</p>
+    <p><strong>2015-10-27:</strong> I have released MyTube, an extension that automates all of this. <strong><a href="/mytube/">Please try it out!</a></strong></p>
 
     <p><strong>2015-03-09:</strong> New design! And it appears this script also works in Chrome now.</p>
 
